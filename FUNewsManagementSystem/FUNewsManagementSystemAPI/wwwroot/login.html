@@ -1,0 +1,58 @@
+﻿<!-- wwwroot/login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - FUNews</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-4">
+                <div class="card shadow">
+                    <div class="card-header text-center">
+                        <h4>Login</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label>Email</label>
+                            <input type="email" class="form-control" id="email" placeholder="Enter email">
+                        </div>
+                        <div class="mb-3">
+                            <label>Password</label>
+                            <input type="password" class="form-control" id="password" placeholder="Enter password">
+                        </div>
+                        <div class="d-grid">
+                            <button onclick="login()" class="btn btn-primary">Login</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 text-center" id="message"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function login() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch("/api/SystemAccount/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+
+            const result = await response.json();
+            const msg = document.getElementById("message");
+
+            if (response.ok) {
+                msg.innerHTML = `<div class="alert alert-success">Welcome! Token: ${result.token}</div>`;
+            } else {
+                msg.innerHTML = `<div class="alert alert-danger">${result}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
