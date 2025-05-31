@@ -1,0 +1,29 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel</title>
+</head>
+<body>
+    <h2>Admin Panel</h2>
+    <button onclick="loadAccounts()">Load Accounts</button>
+    <ul id="accountList"></ul>
+
+    <script>
+        async function loadAccounts() {
+            const res = await fetch('/api/Accounts', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            });
+            const data = await res.json();
+            const list = document.getElementById('accountList');
+            list.innerHTML = '';
+            data.forEach(acc => {
+                const li = document.createElement('li');
+                li.textContent = acc.email + ' - Role: ' + acc.role;
+                list.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>

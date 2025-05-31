@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Lecturer Panel</title>
+</head>
+<body>
+    <h2>Lecturer Panel</h2>
+    <div id="newsList"></div>
+
+    <script>
+        async function loadNews() {
+            const res = await fetch('/api/NewsArticles', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            });
+            const news = await res.json();
+            const div = document.getElementById('newsList');
+            div.innerHTML = '';
+            news.forEach(n => {
+                const item = document.createElement('div');
+                item.innerHTML = `<h3>${n.title}</h3><p>${n.content}</p>`;
+                div.appendChild(item);
+            });
+        }
+
+        loadNews();
+    </script>
+</body>
+</html>

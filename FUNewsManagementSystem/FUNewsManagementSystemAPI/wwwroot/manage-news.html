@@ -1,0 +1,91 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage News</title>
+</head>
+<body>
+    <h2>News Management</h2>
+
+    <form id="newsForm">
+        <input type="text" id="title" placeholder="Title" required />
+        <textarea id="content" placeholder="Content" required></textarea>
+        <input type="text" id="tags" placeholder="Tags (comma separated)" />
+        <select id="categoryId"></select>
+        <button type="submit">Add News</button>
+    </form>
+
+    <ul id="newsList"></ul>
+
+    <script>
+        const token = localStorage.getItem('token');
+
+        async function loadCategories() {
+            const res = await fetch('/api/Categories', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const categories = await res.json();
+            const select = document.getElementById('categoryId');
+            select.innerHTML = '';
+            categories.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                select.appendChild(opt);
+            });
+        }
+
+        async function loadNews() {
+            const res = await fetch('/api/NewsArticles/my', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const news = await res.json();
+            const list = document.getElementById('newsList');
+            list.innerHTML = '';
+            news.forEach(n => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <strong>${n.title}</strong> - ${n.content}
+                    <br/>Tags: ${n.tags?.join(', ') || ''}
+                    <button onclick="deleteNews(${n.id})">Delete</button>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        document.getElementById('newsForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const tags = document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t);
+            const categoryId = parseInt(document.getElementById('categoryId').value);
+
+            await fetch('/api/NewsArticles', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title, content, tags, categoryId })
+            });
+
+            loadNews();
+        });
+
+        async function deleteNews(id) {
+            if (!confirm('Delete this news article?')) return;
+
+            await fetch(`/api/NewsArticles/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+
+            loadNews();
+        }
+
+        loadCategories();
+        loadNews();
+    </script>
+</body>
+</html>

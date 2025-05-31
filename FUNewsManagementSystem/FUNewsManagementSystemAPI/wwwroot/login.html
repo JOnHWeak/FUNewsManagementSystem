@@ -48,11 +48,33 @@
             const msg = document.getElementById("message");
 
             if (response.ok) {
-                msg.innerHTML = `<div class="alert alert-success">Welcome! Token: ${result.token}</div>`;
+                // Lưu token vào localStorage
+                const token = result.token;
+                localStorage.setItem("token", token);
+
+                // Giải mã payload từ JWT token
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const role = payload.role || payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+
+                // Hiển thị thông báo
+                msg.innerHTML = `<div class="alert alert-success">Welcome ${role}!</div>`;
+
+                // Redirect theo role
+                if (role === 'Admin') {
+                    window.location.href = "admin-dashboard.html";
+                } else if (role === 'Staff') {
+                    window.location.href = "staff-dashboard.html";
+                } else if (role === 'Lecturer') {
+                    window.location.href = "lecturer-dashboard.html";
+                } else {
+                    msg.innerHTML = `<div class="alert alert-warning">Unknown role: ${role}</div>`;
+                }
+
             } else {
                 msg.innerHTML = `<div class="alert alert-danger">${result}</div>`;
             }
         }
     </script>
+
 </body>
 </html>

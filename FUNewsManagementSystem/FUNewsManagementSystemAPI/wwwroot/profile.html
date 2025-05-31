@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Profile</title>
+</head>
+<body>
+    <h2>My Profile</h2>
+    <form id="profileForm">
+        <input type="text" id="name" placeholder="Full Name" required />
+        <input type="email" id="email" placeholder="Email" readonly />
+        <button type="submit">Update</button>
+    </form>
+
+    <script>
+        const token = localStorage.getItem('token');
+
+        async function loadProfile() {
+            const res = await fetch('/api/SystemAccount/me', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const user = await res.json();
+            document.getElementById('name').value = user.name || '';
+            document.getElementById('email').value = user.email || '';
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+
+            await fetch('/api/SystemAccount/update-profile', {
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name })
+            });
+
+            alert('Profile updated!');
+        });
+
+        loadProfile();
+    </script>
+</body>
+</html>
