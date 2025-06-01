@@ -11,6 +11,7 @@ namespace Services
     public interface ICategoryService
     {
         List<Category> GetCategories();
+        Category? GetCategoryById(short categoryId);
         bool IsCategoryUsedInNews(short categoryId);
         void DeleteCategory(short categoryId);
         void CreateCategory(Category category);

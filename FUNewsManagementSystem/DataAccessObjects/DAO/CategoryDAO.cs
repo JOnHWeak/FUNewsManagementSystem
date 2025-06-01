@@ -59,5 +59,20 @@ namespace DataAccessObjects.DAO
             context.Categories.Remove(category);
             context.SaveChanges();
         }
+
+        public static Category? GetCategoryById(short categoryId)
+        {
+            try
+            {
+                using var context = new FunewsManagementContext();
+                return context.Categories
+                              .FirstOrDefault(c => c.CategoryId == categoryId);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
     }
 }

@@ -40,5 +40,11 @@ namespace Services
             categoryRepository.UpdateCategory(category);
         }
 
+        public Category? GetCategoryById(short categoryId)
+        {
+            return categoryRepository.GetCategoryById(categoryId);
+        }
+
+
     }
 }

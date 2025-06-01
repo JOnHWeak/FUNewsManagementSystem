@@ -20,5 +20,9 @@ namespace Repositories
         public void AddCategory(Category category) => CategoryDAO.AddCategory(category);
         public void UpdateCategory(Category category) => CategoryDAO.UpdateCategory(category);
 
+        public Category? GetCategoryById(short categoryId) =>
+    CategoryDAO.GetCategoryById(categoryId); // 👈 delegate to DAO
+
+
     }
 }

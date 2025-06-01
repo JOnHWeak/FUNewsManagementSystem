@@ -15,5 +15,7 @@ namespace Repositories
         void AddCategory(Category category);
         void UpdateCategory(Category category);
 
+        Category? GetCategoryById(short categoryId);
+
     }
 }
