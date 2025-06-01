@@ -38,7 +38,8 @@ builder.Services.AddAuthentication(options =>
     {
         ValidateIssuer = false,
         ValidateAudience = false,
-        ValidateLifetime = false,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.FromMinutes(5),
         ValidIssuer = configuration["Jwt:Issuer"],
         ValidAudience = configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"]))
@@ -50,10 +51,11 @@ string adminEmail = configuration["AdminAccount:Email"];
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy =>
-    policy.RequireAssertion(context =>
-        context.User.HasClaim(c => c.Type == ClaimTypes.Email) &&
-        context.User.FindFirst(c => c.Type == ClaimTypes.Email).Value.Equals(adminEmail, StringComparison.OrdinalIgnoreCase)));
-
+        policy.RequireAssertion(context =>
+        {
+            var emailClaim = context.User.FindFirst(ClaimTypes.Email) ?? context.User.FindFirst("email");
+            return emailClaim != null && emailClaim.Value.Equals(adminEmail, StringComparison.OrdinalIgnoreCase);
+        }));
 
     options.AddPolicy("StaffOnly", policy =>
         policy.RequireClaim("Role", "1"));
@@ -63,18 +65,17 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("AdminOrStaffOrLecturer", policy =>
         policy.RequireAssertion(context =>
-            (
-                context.User.HasClaim(c => c.Type == "email") &&
-                context.User.FindFirst(c => c.Type == "email").Value.Equals(adminEmail, StringComparison.OrdinalIgnoreCase)
-            )
-            ||
-            (
-                context.User.HasClaim(c => c.Type == "Role") &&
-                (context.User.FindFirst(c => c.Type == "Role").Value == "1" ||
-                 context.User.FindFirst(c => c.Type == "Role").Value == "2")
-            )
-        ));
+        {
+            var emailClaim = context.User.FindFirst(ClaimTypes.Email) ?? context.User.FindFirst("email");
+            var roleClaim = context.User.FindFirst("Role");
+
+            bool isAdmin = emailClaim != null && emailClaim.Value.Equals(adminEmail, StringComparison.OrdinalIgnoreCase);
+            bool isStaffOrLecturer = roleClaim != null && (roleClaim.Value == "1" || roleClaim.Value == "2");
+
+            return isAdmin || isStaffOrLecturer;
+        }));
 });
+
 
 // Đăng ký các service khác
 builder.Services.AddApplicationServices();
