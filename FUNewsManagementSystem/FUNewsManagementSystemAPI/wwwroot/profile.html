@@ -2,44 +2,104 @@
 <html>
 <head>
     <title>Manage Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <h2>My Profile</h2>
-    <form id="profileForm">
-        <input type="text" id="name" placeholder="Full Name" required />
-        <input type="email" id="email" placeholder="Email" readonly />
-        <button type="submit">Update</button>
-    </form>
+<body class="bg-light">
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>My Profile</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="userInfo">Loading...</div>
+
+                        <hr>
+
+                        <h6>Account Information</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Role</label>
+                            <input type="text" class="form-control" id="role" readonly>
+                        </div>
+
+                        <div class="text-center">
+                            <button class="btn btn-secondary" onclick="goBack()">Back</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         const token = localStorage.getItem('token');
 
         async function loadProfile() {
-            const res = await fetch('/api/SystemAccount/me', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            const user = await res.json();
-            document.getElementById('name').value = user.name || '';
-            document.getElementById('email').value = user.email || '';
+            try {
+                const res = await fetch('/api/Auth/me', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (res.ok) {
+                    const user = await res.json();
+
+                    document.getElementById('userInfo').innerHTML = `
+                            <div class="alert alert-info">
+                                <h5>Welcome, ${user.Name || user.Email}</h5>
+                                <p class="mb-0">You are logged in as: <strong>${user.RoleName}</strong></p>
+                            </div>
+                        `;
+
+                    document.getElementById('email').value = user.Email;
+                    document.getElementById('role').value = user.RoleName;
+                } else {
+                    document.getElementById('userInfo').innerHTML =
+                        '<div class="alert alert-danger">Error loading profile</div>';
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                document.getElementById('userInfo').innerHTML =
+                    '<div class="alert alert-danger">Error loading profile</div>';
+            }
         }
 
-        document.getElementById('profileForm').addEventListener('submit', async e => {
-            e.preventDefault();
-            const name = document.getElementById('name').value;
+        function goBack() {
+            // Determine where to go back based on user role
+            const token = localStorage.getItem('token');
+            if (token) {
+                // Try to get role from token payload
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const role = payload.Role;
 
-            await fetch('/api/SystemAccount/update-profile', {
-                method: 'PUT',
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ name })
-            });
+                    if (role === '0') {
+                        window.location.href = '/dashboard.html';
+                    } else if (role === '1') {
+                        window.location.href = '/staff.html';
+                    } else if (role === '2') {
+                        window.location.href = '/lecturer.html';
+                    } else {
+                        window.location.href = '/dashboard.html';
+                    }
+                } catch (e) {
+                    window.location.href = '/dashboard.html';
+                }
+            } else {
+                window.location.href = '/login.html';
+            }
+        }
 
-            alert('Profile updated!');
-        });
-
-        loadProfile();
+        // Initialize
+        if (!token) {
+            window.location.href = '/login.html';
+        } else {
+            loadProfile();
+        }
     </script>
 </body>
 </html>

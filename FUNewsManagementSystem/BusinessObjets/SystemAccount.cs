@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BusinessObjects;
 
 public partial class SystemAccount
 {
     [Key]
-    public short AccountId { get; set; }
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int AccountId { get; set; }
 
     [Required]
     [StringLength(100)]

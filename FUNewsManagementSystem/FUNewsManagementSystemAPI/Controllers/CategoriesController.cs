@@ -1,14 +1,17 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using BusinessObjects;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Deltas;
+using Microsoft.AspNetCore.OData.Formatter;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
 using Services;
 using Services.DTO;
-using BusinessObjects;
 
 namespace FUNewsManagementSystemAPI.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class CategoriesController : ControllerBase
+    [Route("odata/Categories")]
+    public class CategoriesController : ODataController
     {
         private readonly ICategoryService _categoryService;
 
@@ -18,74 +21,82 @@ namespace FUNewsManagementSystemAPI.Controllers
         }
 
         [Authorize(Policy = "AdminOrStaffOrLecturer")]
+        [EnableQuery]
         [HttpGet]
-        public IActionResult GetCategories()
+        public IActionResult Get()
         {
             var categories = _categoryService.GetCategories();
+            return Ok(categories);
+        }
 
-            var result = categories.Select(c => new CategoryResponseDto
-            {
-                CategoryId = c.CategoryId,
-                CategoryName = c.CategoryName,
-                CategoryDescription = c.CategoryDesciption,
-                ParentCategoryId = c.ParentCategoryId,
-                IsActive = c.IsActive,
-                ParentCategory = c.ParentCategory != null ? new ParentCategoryDto
-                {
-                    CategoryId = c.ParentCategory.CategoryId,
-                    CategoryName = c.ParentCategory.CategoryName
-                } : null,
-                ChildCategories = c.InverseParentCategory.Select(child => new ChildCategoryDto
-                {
-                    CategoryId = child.CategoryId,
-                    CategoryName = child.CategoryName
-                }).ToList()
-            });
+        [Authorize(Policy = "AdminOrStaffOrLecturer")]
+        [EnableQuery]
+        [HttpGet("{key}")]
+        public IActionResult Get([FromODataUri] short key)
+        {
+            var category = _categoryService.GetCategoryById(key);
+            if (category == null)
+                return NotFound();
 
-            return Ok(result);
+            return Ok(category);
         }
 
         [Authorize(Policy = "StaffOnly")]
         [HttpPost]
-        public IActionResult CreateCategory([FromBody] CategoryRequestDto dto)
+        public IActionResult Post([FromBody] Category category)
         {
-            var category = new Category
-            {
-                CategoryName = dto.CategoryName,
-                CategoryDesciption = dto.CategoryDescription,
-                ParentCategoryId = dto.ParentCategoryId,
-                IsActive = dto.IsActive
-            };
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             _categoryService.CreateCategory(category);
-            return Ok();
+            return Created(category);
         }
 
         [Authorize(Policy = "StaffOnly")]
-        [HttpPut("{id}")]
-        public IActionResult UpdateCategory(short id, [FromBody] CategoryRequestDto dto)
+        [HttpPut("{key}")]
+        public IActionResult Put([FromODataUri] short key, [FromBody] Category category)
         {
-            var existing = _categoryService.GetCategoryById(id);
-            if (existing == null) return NotFound();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            existing.CategoryName = dto.CategoryName;
-            existing.CategoryDesciption = dto.CategoryDescription;
-            existing.ParentCategoryId = dto.ParentCategoryId;
-            existing.IsActive = dto.IsActive;
+            var existing = _categoryService.GetCategoryById(key);
+            if (existing == null)
+                return NotFound();
 
+            category.CategoryId = key;
+            _categoryService.UpdateCategory(category);
+            return Updated(category);
+        }
+
+        [Authorize(Policy = "StaffOnly")]
+        [HttpPatch("{key}")]
+        public IActionResult Patch([FromODataUri] short key, [FromBody] Delta<Category> delta)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var existing = _categoryService.GetCategoryById(key);
+            if (existing == null)
+                return NotFound();
+
+            delta.Put(existing);
             _categoryService.UpdateCategory(existing);
-            return Ok();
+            return Updated(existing);
         }
 
         [Authorize(Policy = "StaffOnly")]
-        [HttpDelete("{id}")]
-        public IActionResult DeleteCategory(short id)
+        [HttpDelete("{key}")]
+        public IActionResult Delete([FromODataUri] short key)
         {
-            if (_categoryService.IsCategoryUsedInNews(id))
+            var category = _categoryService.GetCategoryById(key);
+            if (category == null)
+                return NotFound();
+
+            if (_categoryService.IsCategoryUsedInNews(key))
                 return BadRequest("Cannot delete category used in news articles.");
 
-            _categoryService.DeleteCategory(id);
-            return Ok("Category deleted");
+            _categoryService.DeleteCategory(key);
+            return NoContent();
         }
     }
 }

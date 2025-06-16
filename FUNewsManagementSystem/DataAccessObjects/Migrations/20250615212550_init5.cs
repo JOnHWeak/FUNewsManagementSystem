@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DataAccessObjects.Migrations
 {
     /// <inheritdoc />
-    public partial class addNewTag : Migration
+    public partial class init5 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -18,7 +18,7 @@ namespace DataAccessObjects.Migrations
                     CategoryID = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CategoryName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    CategoryDesciption = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
+                    CategoryDescription = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
                     ParentCategoryID = table.Column<short>(type: "smallint", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: true)
                 },
@@ -36,11 +36,11 @@ namespace DataAccessObjects.Migrations
                 name: "SystemAccount",
                 columns: table => new
                 {
-                    AccountID = table.Column<short>(type: "smallint", nullable: false),
-                    AccountName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    AccountEmail = table.Column<string>(type: "nvarchar(70)", maxLength: 70, nullable: true),
-                    AccountRole = table.Column<int>(type: "int", nullable: true),
-                    AccountPassword = table.Column<string>(type: "nvarchar(70)", maxLength: 70, nullable: true)
+                    AccountID = table.Column<int>(type: "int", nullable: false),
+                    AccountName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    AccountEmail = table.Column<string>(type: "nvarchar(70)", maxLength: 70, nullable: false),
+                    AccountRole = table.Column<int>(type: "int", nullable: false),
+                    AccountPassword = table.Column<string>(type: "nvarchar(70)", maxLength: 70, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -52,7 +52,7 @@ namespace DataAccessObjects.Migrations
                 columns: table => new
                 {
                     TagID = table.Column<int>(type: "int", nullable: false),
-                    TagName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    TagName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Note = table.Column<string>(type: "nvarchar(400)", maxLength: 400, nullable: true)
                 },
                 constraints: table =>
@@ -65,15 +65,15 @@ namespace DataAccessObjects.Migrations
                 columns: table => new
                 {
                     NewsArticleID = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    NewsTitle = table.Column<string>(type: "nvarchar(400)", maxLength: 400, nullable: true),
+                    NewsTitle = table.Column<string>(type: "nvarchar(400)", maxLength: 400, nullable: false),
                     Headline = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime", nullable: true),
                     NewsContent = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: true),
                     NewsSource = table.Column<string>(type: "nvarchar(400)", maxLength: 400, nullable: true),
                     CategoryID = table.Column<short>(type: "smallint", nullable: true),
                     NewsStatus = table.Column<bool>(type: "bit", nullable: true),
-                    CreatedByID = table.Column<short>(type: "smallint", nullable: true),
-                    UpdatedByID = table.Column<short>(type: "smallint", nullable: true),
+                    CreatedByID = table.Column<int>(type: "int", nullable: true),
+                    UpdatedByID = table.Column<int>(type: "int", nullable: true),
                     ModifiedDate = table.Column<DateTime>(type: "datetime", nullable: true)
                 },
                 constraints: table =>

@@ -2,13 +2,111 @@
 <html>
 <head>
     <title>Staff Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <h2>Staff Panel</h2>
-    <ul>
-        <li><a href="manage-categories.html">Manage Categories</a></li>
-        <li><a href="manage-news.html">Manage News</a></li>
-        <li><a href="profile.html">Manage Profile</a></li>
-    </ul>
+<body class="bg-light">
+    <div class="container mt-4">
+        <h2>Staff Panel</h2>
+        <p>Welcome to the Staff Management Panel</p>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Manage Categories</h5>
+                        <p class="card-text">Create and manage news categories</p>
+                        <a href="manage-categories.html" class="btn btn-primary">Go to Categories</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Manage News</h5>
+                        <p class="card-text">Create and manage news articles</p>
+                        <a href="manage-news.html" class="btn btn-primary">Go to News</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">My Profile</h5>
+                        <p class="card-text">View and manage your profile</p>
+                        <a href="profile.html" class="btn btn-outline-primary">Go to Profile</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Quick Stats</h5>
+                        <div id="statsContent">
+                            <button class="btn btn-outline-info" onclick="loadStats()">Load Statistics</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 text-center">
+            <button class="btn btn-secondary" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+
+        async function loadStats() {
+            const statsContent = document.getElementById('statsContent');
+            statsContent.innerHTML = 'Loading...';
+
+            try {
+                const [newsRes, categoriesRes, tagsRes] = await Promise.all([
+                    fetch('/odata/NewsArticles?$count=true&$top=0', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    }),
+                    fetch('/odata/Categories?$count=true&$top=0', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    }),
+                    fetch('/odata/Tags?$count=true&$top=0', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    })
+                ]);
+
+                const [newsData, categoriesData, tagsData] = await Promise.all([
+                    newsRes.json(),
+                    categoriesRes.json(),
+                    tagsRes.json()
+                ]);
+
+                statsContent.innerHTML = `
+                    <p><strong>News Articles:</strong> ${newsData['@odata.count'] || 0}</p>
+                    <p><strong>Categories:</strong> ${categoriesData['@odata.count'] || 0}</p>
+                    <p><strong>Tags:</strong> ${tagsData['@odata.count'] || 0}</p>
+                `;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                statsContent.innerHTML = 'Error loading statistics';
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('token');
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Check authentication
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+    </script>
 </body>
 </html>

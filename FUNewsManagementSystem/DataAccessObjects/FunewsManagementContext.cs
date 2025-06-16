@@ -9,14 +9,10 @@ namespace DataAccessObjects;
 
 public partial class FunewsManagementContext : DbContext
 {
-    public FunewsManagementContext()
-    {
-    }
+    public FunewsManagementContext() { }
 
     public FunewsManagementContext(DbContextOptions<FunewsManagementContext> options)
-        : base(options)
-    {
-    }
+        : base(options) { }
 
     public virtual DbSet<Category> Categories { get; set; }
     public virtual DbSet<NewsArticle> NewsArticles { get; set; }
@@ -48,11 +44,13 @@ public partial class FunewsManagementContext : DbContext
             entity.ToTable("Category");
 
             entity.Property(e => e.CategoryId).HasColumnName("CategoryID");
-            entity.Property(e => e.CategoryDesciption).HasMaxLength(250);
+            entity.Property(e => e.CategoryDescription).HasMaxLength(250);
             entity.Property(e => e.CategoryName).HasMaxLength(100);
             entity.Property(e => e.ParentCategoryId).HasColumnName("ParentCategoryID");
 
-            entity.HasOne(d => d.ParentCategory).WithMany(p => p.InverseParentCategory)
+            entity
+                .HasOne(d => d.ParentCategory)
+                .WithMany(p => p.InverseParentCategory)
                 .HasForeignKey(d => d.ParentCategoryId)
                 .HasConstraintName("FK_Category_Category");
         });
@@ -61,9 +59,7 @@ public partial class FunewsManagementContext : DbContext
         {
             entity.ToTable("NewsArticle");
 
-            entity.Property(e => e.NewsArticleId)
-                .HasMaxLength(20)
-                .HasColumnName("NewsArticleID");
+            entity.Property(e => e.NewsArticleId).HasMaxLength(20).HasColumnName("NewsArticleID");
             entity.Property(e => e.CategoryId).HasColumnName("CategoryID");
             entity.Property(e => e.CreatedById).HasColumnName("CreatedByID");
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
@@ -74,12 +70,16 @@ public partial class FunewsManagementContext : DbContext
             entity.Property(e => e.NewsTitle).HasMaxLength(400);
             entity.Property(e => e.UpdatedById).HasColumnName("UpdatedByID");
 
-            entity.HasOne(d => d.Category).WithMany(p => p.NewsArticles)
+            entity
+                .HasOne(d => d.Category)
+                .WithMany(p => p.NewsArticles)
                 .HasForeignKey(d => d.CategoryId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_NewsArticle_Category");
 
-            entity.HasOne(d => d.CreatedBy).WithMany(p => p.NewsArticles)
+            entity
+                .HasOne(d => d.CreatedBy)
+                .WithMany(p => p.NewsArticles)
                 .HasForeignKey(d => d.CreatedById)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_NewsArticle_SystemAccount");
@@ -91,20 +91,19 @@ public partial class FunewsManagementContext : DbContext
 
             entity.ToTable("NewsTag");
 
-            entity.Property(e => e.NewsArticleId)
-                .HasMaxLength(20)
-                .HasColumnName("NewsArticleID");
+            entity.Property(e => e.NewsArticleId).HasMaxLength(20).HasColumnName("NewsArticleID");
 
-            entity.Property(e => e.TagId)
-                .HasColumnName("TagID");
+            entity.Property(e => e.TagId).HasColumnName("TagID");
 
-            entity.HasOne(e => e.NewsArticle)
+            entity
+                .HasOne(e => e.NewsArticle)
                 .WithMany(e => e.NewsTags)
                 .HasForeignKey(e => e.NewsArticleId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_NewsTag_NewsArticle");
 
-            entity.HasOne(e => e.Tag)
+            entity
+                .HasOne(e => e.Tag)
                 .WithMany(e => e.NewsTags)
                 .HasForeignKey(e => e.TagId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -116,9 +115,7 @@ public partial class FunewsManagementContext : DbContext
             entity.HasKey(e => e.AccountId);
             entity.ToTable("SystemAccount");
 
-            entity.Property(e => e.AccountId)
-                .ValueGeneratedNever()
-                .HasColumnName("AccountID");
+            entity.Property(e => e.AccountId).ValueGeneratedNever().HasColumnName("AccountID");
             entity.Property(e => e.AccountEmail).HasMaxLength(70);
             entity.Property(e => e.AccountName).HasMaxLength(100);
             entity.Property(e => e.AccountPassword).HasMaxLength(70);
@@ -130,9 +127,7 @@ public partial class FunewsManagementContext : DbContext
 
             entity.ToTable("Tag");
 
-            entity.Property(e => e.TagId)
-                .ValueGeneratedNever()
-                .HasColumnName("TagID");
+            entity.Property(e => e.TagId).ValueGeneratedNever().HasColumnName("TagID");
             entity.Property(e => e.Note).HasMaxLength(400);
             entity.Property(e => e.TagName).HasMaxLength(50);
         });

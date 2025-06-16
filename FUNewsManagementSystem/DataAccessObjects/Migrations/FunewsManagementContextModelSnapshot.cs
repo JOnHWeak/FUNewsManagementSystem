@@ -31,7 +31,7 @@ namespace DataAccessObjects.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("CategoryId"));
 
-                    b.Property<string>("CategoryDesciption")
+                    b.Property<string>("CategoryDescription")
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
@@ -66,8 +66,8 @@ namespace DataAccessObjects.Migrations
                         .HasColumnType("smallint")
                         .HasColumnName("CategoryID");
 
-                    b.Property<short?>("CreatedById")
-                        .HasColumnType("smallint")
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("int")
                         .HasColumnName("CreatedByID");
 
                     b.Property<DateTime?>("CreatedDate")
@@ -93,11 +93,12 @@ namespace DataAccessObjects.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("NewsTitle")
+                        .IsRequired()
                         .HasMaxLength(400)
                         .HasColumnType("nvarchar(400)");
 
-                    b.Property<short?>("UpdatedById")
-                        .HasColumnType("smallint")
+                    b.Property<int?>("UpdatedById")
+                        .HasColumnType("int")
                         .HasColumnName("UpdatedByID");
 
                     b.HasKey("NewsArticleId");
@@ -129,23 +130,28 @@ namespace DataAccessObjects.Migrations
 
             modelBuilder.Entity("BusinessObjects.SystemAccount", b =>
                 {
-                    b.Property<short>("AccountId")
-                        .HasColumnType("smallint")
+                    b.Property<int>("AccountId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
                         .HasColumnName("AccountID");
 
                     b.Property<string>("AccountEmail")
+                        .IsRequired()
                         .HasMaxLength(70)
                         .HasColumnType("nvarchar(70)");
 
                     b.Property<string>("AccountName")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("AccountPassword")
+                        .IsRequired()
                         .HasMaxLength(70)
                         .HasColumnType("nvarchar(70)");
 
                     b.Property<int?>("AccountRole")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.HasKey("AccountId");
@@ -164,6 +170,7 @@ namespace DataAccessObjects.Migrations
                         .HasColumnType("nvarchar(400)");
 
                     b.Property<string>("TagName")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BusinessObjects;
 
@@ -11,7 +12,7 @@ public partial class NewsArticle
 
     [Required]
     [StringLength(200)]
-    public string? NewsTitle { get; set; }
+    public string NewsTitle { get; set; } = null!;
 
     [Required]
     [StringLength(500)]
@@ -25,17 +26,23 @@ public partial class NewsArticle
     [StringLength(200)]
     public string? NewsSource { get; set; }
 
+    // Remove ForeignKey attribute and let EF handle it through navigation property
     public short? CategoryId { get; set; }
 
     public bool? NewsStatus { get; set; }
 
-    public short? CreatedById { get; set; }
+    public int? CreatedById { get; set; }
 
-    public short? UpdatedById { get; set; }
+    public int? UpdatedById { get; set; }
 
     public DateTime? ModifiedDate { get; set; }
 
+    // Navigation properties
+    [ForeignKey("CategoryId")]
     public virtual Category? Category { get; set; }
+
+    [ForeignKey("CreatedById")]
     public virtual SystemAccount? CreatedBy { get; set; }
+
     public virtual ICollection<NewsTag> NewsTags { get; set; } = new List<NewsTag>();
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+
 namespace BusinessObjects;
 
 public partial class Category
@@ -14,7 +15,7 @@ public partial class Category
 
     [Required]
     [StringLength(500)]
-    public string CategoryDesciption { get; set; } = null!;
+    public string CategoryDescription { get; set; } = null!;
 
     public short? ParentCategoryId { get; set; }
 
