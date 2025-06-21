@@ -21,17 +21,20 @@ namespace FUNewsManagementSystemAPI.Controllers
     {
         private readonly ISystemAccountService _accountService;
         private readonly IConfiguration _configuration;
+        private readonly INewsArticleService _newsArticleService;
 
         public SystemAccountController(
             ISystemAccountService accountService,
-            IConfiguration configuration
+            IConfiguration configuration,
+            INewsArticleService newsArticleService
         )
         {
             _accountService = accountService;
             _configuration = configuration;
+            _newsArticleService = newsArticleService;
         }
 
-        // Keep login as regular API endpoint since it's not a typical OData operation
+        // Login endpoint - không cần authorize
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -59,8 +62,8 @@ namespace FUNewsManagementSystemAPI.Controllers
                     var adminClaims = new[]
                     {
                         new Claim(ClaimTypes.Email, adminEmail),
-                        new Claim("Role", "0"),
-                        new Claim(ClaimTypes.NameIdentifier, "AccountId"),
+                        new Claim("Role", "0"), // Role 0 = Admin
+                        new Claim(ClaimTypes.NameIdentifier, "admin"),
                         new Claim(ClaimTypes.Name, "Administrator"),
                     };
 
@@ -78,41 +81,63 @@ namespace FUNewsManagementSystemAPI.Controllers
                 else
                 {
                     // Regular user authentication from database
-                    var account = await _accountService.GetAccountByEmailAsync(request.Email);
+                    SystemAccount account;
+                    try
+                    {
+                        account = await _accountService.GetAccountByEmailAsync(request.Email);
+                    }
+                    catch (Exception ex)
+                    {
+                        return StatusCode(500, new { error = "Database error in GetAccountByEmailAsync", message = ex.Message });
+                    }
+
                     if (account == null)
                         return Unauthorized("Email does not exist");
 
                     if (account.AccountPassword != request.Password)
                         return Unauthorized("Incorrect password");
 
-                    var userClaims = new[]
+                    try
                     {
-                        new Claim(ClaimTypes.Email, account.AccountEmail),
-                        new Claim("Role", account.AccountRole?.ToString() ?? "0"),
-                        new Claim(ClaimTypes.Name, account.AccountName ?? account.AccountEmail),
-                    };
+                        // Debug: Log the account properties
+                        var accountIdType = account.AccountId.GetType().Name;
+                        var accountRoleType = account.AccountRole?.GetType().Name ?? "null";
 
-                    var userToken = GenerateJwtToken(userClaims);
-
-                    return Ok(
-                        new LoginResponse
+                        var userClaims = new[]
                         {
-                            Token = userToken,
-                            Email = account.AccountEmail,
-                            Role = account.AccountRole ?? 0,
-                        }
-                    );
+                            new Claim(ClaimTypes.Email, account.AccountEmail ?? ""),
+                            new Claim("Role", account.AccountRole?.ToString() ?? "0"),
+                            new Claim(ClaimTypes.NameIdentifier, account.AccountId.ToString()),
+                            new Claim(ClaimTypes.Name, account.AccountName ?? account.AccountEmail ?? ""),
+                        };
+
+                        var userToken = GenerateJwtToken(userClaims);
+
+                        return Ok(
+                            new LoginResponse
+                            {
+                                Token = userToken,
+                                Email = account.AccountEmail,
+                                Role = account.AccountRole ?? 0,
+                            }
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        return StatusCode(500, new { error = "Token generation error", message = ex.Message, stackTrace = ex.StackTrace });
+                    }
                 }
             }
             catch (Exception ex)
             {
                 return StatusCode(
                     500,
-                    new { error = "Internal server error", message = ex.Message }
+                    new { error = "Internal server error", message = ex.Message, stackTrace = ex.StackTrace }
                 );
             }
         }
 
+        // Get current user info
         [HttpGet("me")]
         [Authorize]
         public IActionResult GetMe()
@@ -149,35 +174,7 @@ namespace FUNewsManagementSystemAPI.Controllers
             }
         }
 
-        private string GenerateJwtToken(Claim[] claims)
-        {
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"])
-            );
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddHours(8),
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        private static string GetRoleName(int role)
-        {
-            return role switch
-            {
-                0 => "Administrator",
-                1 => "Staff",
-                2 => "Lecturer",
-                _ => "Unknown",
-            };
-        }
-
+        // CRUD operations - Chỉ Admin được phép
         [Authorize(Policy = "AdminOnly")]
         [EnableQuery]
         [HttpGet]
@@ -187,6 +184,7 @@ namespace FUNewsManagementSystemAPI.Controllers
             return Ok(accounts);
         }
 
+        [Authorize(Policy = "AdminOnly")]
         [EnableQuery]
         [HttpGet("{key}")]
         public async Task<IActionResult> Get([FromODataUri] short key)
@@ -211,7 +209,7 @@ namespace FUNewsManagementSystemAPI.Controllers
         [Authorize(Policy = "AdminOnly")]
         [HttpPut("{key}")]
         public async Task<IActionResult> Put(
-            [FromODataUri] short key,
+            [FromODataUri] int key,
             [FromBody] SystemAccount account
         )
         {
@@ -244,6 +242,7 @@ namespace FUNewsManagementSystemAPI.Controllers
             return Updated(existing);
         }
 
+        // Delete account - chỉ được xóa nếu account chưa tạo news article nào
         [Authorize(Policy = "AdminOnly")]
         [HttpDelete("{key}")]
         public async Task<IActionResult> Delete([FromODataUri] short key)
@@ -252,8 +251,60 @@ namespace FUNewsManagementSystemAPI.Controllers
             if (account == null)
                 return NotFound();
 
+            // Kiểm tra xem account có tạo news article nào không
+            var hasNewsArticles = await _accountService.HasCreatedNewsArticlesAsync(key);
+            if (hasNewsArticles)
+            {
+                return BadRequest("Cannot delete account that has created news articles.");
+            }
+
             await _accountService.DeleteAccountAsync(key);
             return NoContent();
+        }
+
+        // Report for Admin - thống kê theo khoảng thời gian
+        [Authorize(Policy = "AdminOnly")]
+        [HttpGet("report")]
+        public async Task<IActionResult> GetReport([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+        {
+            try
+            {
+                var report = _newsArticleService.GetNewsArticlesByPeriod(startDate, endDate);
+                return Ok(report);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Error generating report", message = ex.Message });
+            }
+        }
+
+        private string GenerateJwtToken(Claim[] claims)
+        {
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"])
+            );
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(8),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private static string GetRoleName(int role)
+        {
+            return role switch
+            {
+                0 => "Administrator",
+                1 => "Staff",
+                2 => "Lecturer",
+                _ => "Unknown",
+            };
         }
     }
 }

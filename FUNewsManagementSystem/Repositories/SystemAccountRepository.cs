@@ -10,11 +10,14 @@ namespace Repositories
         public async Task<IEnumerable<SystemAccount>> GetAllAccountsAsync() =>
             await SystemAccountDAO.GetAllSystemAccountsAsync();
 
-        public async Task<SystemAccount> GetAccountByIdAsync(short accountId) =>
+        public async Task<SystemAccount?> GetAccountByIdAsync(short accountId) =>
             await SystemAccountDAO.GetSystemAccountByIdAsync(accountId);
 
-        public async Task<SystemAccount> GetAccountByEmailAsync(string email) =>
+        public async Task<SystemAccount?> GetAccountByEmailAsync(string email) =>
             await SystemAccountDAO.GetSystemAccountByEmailAsync(email);
+
+        public async Task<IEnumerable<SystemAccount>> GetAccountsByRoleAsync(int role) =>
+            await SystemAccountDAO.GetSystemAccountsByRoleAsync(role);
 
         public async Task UpdateAccountAsync(SystemAccount account) =>
             await SystemAccountDAO.UpdateAccountAsync(account);
@@ -25,7 +28,10 @@ namespace Repositories
         public async Task DeleteAccountAsync(short accountId) =>
             await SystemAccountDAO.DeleteSystemAccountAsync(accountId);
 
-        public async Task<SystemAccount> GetAccountProfileAsync(short accountId) =>
-            await SystemAccountDAO.GetSystemAccountByIdAsync(accountId);
+        public async Task<SystemAccount?> GetAccountProfileAsync(short accountId) =>
+            await SystemAccountDAO.GetAccountProfileAsync(accountId);
+
+        public async Task<bool> HasCreatedNewsArticlesAsync(short accountId) =>
+            await SystemAccountDAO.HasCreatedNewsArticlesAsync(accountId);
     }
 }

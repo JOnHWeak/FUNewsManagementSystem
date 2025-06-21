@@ -5,8 +5,9 @@ using Microsoft.AspNetCore.OData.Deltas;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
+using Microsoft.Identity.Client;
 using Services;
-using Services.DTO;
+using System.Security.Claims;
 
 namespace FUNewsManagementSystemAPI.Controllers
 {
@@ -20,7 +21,8 @@ namespace FUNewsManagementSystemAPI.Controllers
             _newsArticleService = newsArticleService;
         }
 
-        [Authorize(Policy = "AdminOrStaffOrLecturer")]
+        // Read - Staff có thể xem tất cả news articles
+        [Authorize(Policy = "StaffOnly")]
         [EnableQuery]
         [HttpGet]
         public IActionResult Get()
@@ -29,7 +31,8 @@ namespace FUNewsManagementSystemAPI.Controllers
             return Ok(articles);
         }
 
-        [Authorize(Policy = "AdminOrStaffOrLecturer")]
+        // Read single article - Staff có thể xem chi tiết
+        [Authorize(Policy = "StaffOnly")]
         [EnableQuery]
         [HttpGet("{key}")]
         public IActionResult Get([FromODataUri] string key)
@@ -41,6 +44,7 @@ namespace FUNewsManagementSystemAPI.Controllers
             return Ok(article);
         }
 
+        // Create - Staff có thể tạo news article
         [Authorize(Policy = "StaffOnly")]
         [HttpPost]
         public IActionResult Post([FromBody] NewsArticle article)
@@ -54,11 +58,19 @@ namespace FUNewsManagementSystemAPI.Controllers
                 article.NewsArticleId = Guid.NewGuid().ToString();
             }
 
+            // Set creator ID from token
+            var creatorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (short.TryParse(creatorId, out short accountId))
+            {
+                article.CreatedById = accountId;
+            }
+
             article.CreatedDate = DateTime.UtcNow;
             _newsArticleService.AddNewsArticle(article);
             return Created(article);
         }
 
+        // Update - Staff có thể cập nhật news article
         [Authorize(Policy = "StaffOnly")]
         [HttpPut("{key}")]
         public IActionResult Put([FromODataUri] string key, [FromBody] NewsArticle article)
@@ -72,10 +84,16 @@ namespace FUNewsManagementSystemAPI.Controllers
 
             article.NewsArticleId = key;
             article.ModifiedDate = DateTime.UtcNow;
+
+            // Preserve original creator and created date
+            article.CreatedById = existing.CreatedById;
+            article.CreatedDate = existing.CreatedDate;
+
             _newsArticleService.UpdateNewsArticle(article);
             return Updated(article);
         }
 
+        // Partial Update - Staff có thể cập nhật một phần
         [Authorize(Policy = "StaffOnly")]
         [HttpPatch("{key}")]
         public IActionResult Patch([FromODataUri] string key, [FromBody] Delta<NewsArticle> delta)
@@ -93,6 +111,7 @@ namespace FUNewsManagementSystemAPI.Controllers
             return Updated(existing);
         }
 
+        // Delete - Staff có thể xóa news article
         [Authorize(Policy = "StaffOnly")]
         [HttpDelete("{key}")]
         public IActionResult Delete([FromODataUri] string key)
@@ -105,22 +124,19 @@ namespace FUNewsManagementSystemAPI.Controllers
             return NoContent();
         }
 
-        // Custom actions using OData conventions
+        // Get news articles created by current staff member
         [Authorize(Policy = "StaffOnly")]
         [EnableQuery]
-        [HttpGet("odata/NewsArticles/GetByCreator(accountId={accountId})")]
-        public IActionResult GetByCreator([FromODataUri] short accountId)
+        [HttpGet("my-articles")]
+        public IActionResult GetMyArticles()
         {
-            var articles = _newsArticleService.GetNewsByCreator(accountId);
-            return Ok(articles);
-        }
+            var creatorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!short.TryParse(creatorId, out short accountId))
+            {
+                return BadRequest("Invalid account ID");
+            }
 
-        [Authorize(Policy = "AdminOrStaffOrLecturer")]
-        [EnableQuery]
-        [HttpGet("odata/NewsArticles/SearchByKeyword(keyword='{keyword}')")]
-        public IActionResult SearchByKeyword([FromODataUri] string keyword)
-        {
-            var articles = _newsArticleService.SearchNewsByKeyword(keyword);
+            var articles = _newsArticleService.GetNewsByCreator(accountId);
             return Ok(articles);
         }
     }

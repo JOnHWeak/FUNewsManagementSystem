@@ -16,35 +16,54 @@ namespace DataAccessObjects.DAO
             return context.Tags.ToList();
         }
 
-        public static void AddTag(Tag tag)
+        public static Tag GetTagById(int id)
         {
             using var context = new FunewsManagementContext();
-            context.Tags.Add(tag);
-            context.SaveChanges();
+            return context.Tags.FirstOrDefault(t => t.TagId == id);
         }
 
-        public static void UpdateTag(Tag tag)
+        public static Tag GetTagByName(string name)
         {
             using var context = new FunewsManagementContext();
-            context.Tags.Update(tag);
-            context.SaveChanges();
+            return context.Tags.FirstOrDefault(t => t.TagName == name);
         }
 
-        public static void DeleteTag(int tagId)
+        public static async Task<Tag> CreateTagAsync(string tagName)
         {
             using var context = new FunewsManagementContext();
-            var tag = context.Tags
-                             .Include(t => t.NewsTags)
-                             .FirstOrDefault(t => t.TagId == tagId);
 
-            if (tag == null)
-                throw new Exception($"Tag with ID {tagId} not found.");
+            var existingTag = await context.Tags.FirstOrDefaultAsync(t => t.TagName == tagName);
+            if (existingTag != null)
+                return existingTag;
 
-            if (tag.NewsTags != null && tag.NewsTags.Any())
-                throw new InvalidOperationException("Cannot delete tag, it is associated with a news article.");
+            var newTag = new Tag { TagName = tagName };
+            await context.Tags.AddAsync(newTag);
+            await context.SaveChangesAsync();
+            return newTag;
+        }
 
-            context.Tags.Remove(tag);
-            context.SaveChanges();
+        public static List<Tag> GetOrCreateTags(List<string> tagNames)
+        {
+            using var context = new FunewsManagementContext();
+            var tags = new List<Tag>();
+
+            foreach (var tagName in tagNames)
+            {
+                var existingTag = context.Tags.FirstOrDefault(t => t.TagName == tagName);
+                if (existingTag != null)
+                {
+                    tags.Add(existingTag);
+                }
+                else
+                {
+                    var newTag = new Tag { TagName = tagName };
+                    context.Tags.Add(newTag);
+                    context.SaveChanges();
+                    tags.Add(newTag);
+                }
+            }
+
+            return tags;
         }
     }
 }

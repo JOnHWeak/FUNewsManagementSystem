@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Services.DTO
 {
@@ -9,21 +10,34 @@ namespace Services.DTO
     {
         public class NewsArticleRequestDto
         {
-            public string? NewsTitle { get; set; }
+            [Required]
+            [StringLength(200)]
+            public string NewsTitle { get; set; } = null!;
+
+            [Required]
+            [StringLength(500)]
             public string Headline { get; set; } = null!;
+
+            [StringLength(2000)]
             public string? NewsContent { get; set; }
+
+            [StringLength(200)]
             public string? NewsSource { get; set; }
+
             public short? CategoryId { get; set; }
-            public bool? NewsStatus { get; set; }
-            public short? CreatedById { get; set; }
-            public short? UpdatedById { get; set; }
-            public List<string>? TagIds { get; set; }
+            public bool? NewsStatus { get; set; } = true;
+            public int? CreatedById { get; set; }
+            public int? UpdatedById { get; set; }
+
+            // Support both tag names and IDs
+            public List<string>? TagNames { get; set; }
+            public List<int>? TagIds { get; set; }
         }
 
         public class NewsArticleResponseDto
         {
             public string NewsArticleId { get; set; } = null!;
-            public string? NewsTitle { get; set; }
+            public string NewsTitle { get; set; } = null!;
             public string Headline { get; set; } = null!;
             public DateTime? CreatedDate { get; set; }
             public string? NewsContent { get; set; }
@@ -31,11 +45,11 @@ namespace Services.DTO
             public short? CategoryId { get; set; }
             public string? CategoryName { get; set; }
             public bool? NewsStatus { get; set; }
-            public short? CreatedById { get; set; }
+            public int? CreatedById { get; set; }
             public string? CreatedByName { get; set; }
-            public short? UpdatedById { get; set; }
+            public int? UpdatedById { get; set; }
             public DateTime? ModifiedDate { get; set; }
-            public List<string>? Tags { get; set; }
+            public List<TagResponseDto>? Tags { get; set; }
         }
     }
 
