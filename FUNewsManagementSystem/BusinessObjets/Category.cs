@@ -14,7 +14,7 @@ public partial class Category
     public string CategoryName { get; set; } = null!;
 
     [Required]
-    [StringLength(500)]
+    [StringLength(250)]
     public string CategoryDescription { get; set; } = null!;
 
     public short? ParentCategoryId { get; set; }

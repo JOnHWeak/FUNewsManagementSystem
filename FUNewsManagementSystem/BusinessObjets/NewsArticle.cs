@@ -31,9 +31,9 @@ public partial class NewsArticle
 
     public bool? NewsStatus { get; set; }
 
-    public int? CreatedById { get; set; }
+    public short? CreatedById { get; set; }
 
-    public int? UpdatedById { get; set; }
+    public short? UpdatedById { get; set; }
 
     public DateTime? ModifiedDate { get; set; }
 
