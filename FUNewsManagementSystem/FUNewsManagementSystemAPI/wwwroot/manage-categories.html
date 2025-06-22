@@ -1,56 +1,296 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Manage Categories</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <div class="container mt-4">
-        <h2>Category Management</h2>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            --danger-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --card-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            --hover-transform: translateY(-2px);
+        }
 
-        <div class="card mb-4">
-            <div class="card-header">Add New Category</div>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+        }
+
+            .main-header h1 {
+                margin: 0;
+                font-weight: 300;
+                letter-spacing: 1px;
+            }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+            .card:hover {
+                transform: var(--hover-transform);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            }
+
+        .card-header {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 1.5rem;
+            font-weight: 500;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #667eea;
+                box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            }
+
+        .btn {
+            border-radius: 25px;
+            padding: 0.75rem 2rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+        }
+
+            .btn-primary:hover {
+                transform: var(--hover-transform);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            }
+
+        .btn-success {
+            background: var(--success-gradient);
+            border: none;
+        }
+
+        .btn-danger {
+            background: var(--danger-gradient);
+            border: none;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+            .table thead th {
+                background: var(--primary-gradient);
+                color: white;
+                border: none;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .table tbody tr {
+                transition: all 0.3s ease;
+            }
+
+                .table tbody tr:hover {
+                    background-color: rgba(102, 126, 234, 0.1);
+                    transform: scale(1.02);
+                }
+
+        .badge {
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .toast {
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .edit-mode {
+            background-color: rgba(102, 126, 234, 0.1);
+            border: 2px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="main-header">
+        <div class="container">
+            <h1><i class="fas fa-tags me-3"></i>Category Management System</h1>
+            <p class="mb-0 opacity-75">Create, manage, and organize your news categories</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Create/Edit Category Form -->
+        <div class="card mb-4 fade-in">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-plus-circle me-2"></i>
+                    <span id="formTitle">Add New Category</span>
+                </div>
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="resetForm()" id="resetBtn" style="display: none;">
+                    <i class="fas fa-plus"></i> Add New
+                </button>
+            </div>
             <div class="card-body">
-                <form id="createCategoryForm">
-                    <div class="row">
+                <form id="categoryForm">
+                    <input type="hidden" id="categoryId" value="">
+                    <input type="hidden" id="isEditing" value="false">
+
+                    <div class="row g-3">
                         <div class="col-md-4">
-                            <input type="text" class="form-control" id="categoryName" placeholder="Category Name" required />
+                            <label for="categoryName" class="form-label">
+                                <i class="fas fa-tag text-primary me-1"></i>Category Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="categoryName" placeholder="Enter category name" required>
                         </div>
-                        <div class="col-md-4">
-                            <input type="text" class="form-control" id="categoryDescription" placeholder="Description" required />
+                        <div class="col-md-6">
+                            <label for="categoryDescription" class="form-label">
+                                <i class="fas fa-align-left text-primary me-1"></i>Description <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="categoryDescription" placeholder="Enter category description" required>
                         </div>
                         <div class="col-md-2">
-                            <div class="form-check">
+                            <label class="form-label">Status</label>
+                            <div class="form-check form-switch mt-2">
                                 <input class="form-check-input" type="checkbox" id="isActive" checked>
-                                <label class="form-check-label">Active</label>
+                                <label class="form-check-label" for="isActive">
+                                    <i class="fas fa-toggle-on text-success me-1"></i>Active
+                                </label>
                             </div>
                         </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary">Add</button>
-                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            <span id="saveBtnText">Add Category</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetForm()" id="cancelBtn" style="display: none;">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">Categories List</div>
-            <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Description</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="categoryList">
-                        <tr><td colspan="5">Loading...</td></tr>
-                    </tbody>
-                </table>
+        <!-- Categories List -->
+        <div class="card fade-in">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-list me-2"></i>Categories List
+                </div>
+                <button class="btn btn-outline-light btn-sm" onclick="loadCategories()">
+                    <i class="fas fa-sync-alt me-1"></i>Refresh
+                </button>
             </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-hashtag me-1"></i>ID</th>
+                                <th><i class="fas fa-tag me-1"></i>Name</th>
+                                <th><i class="fas fa-align-left me-1"></i>Description</th>
+                                <th><i class="fas fa-toggle-on me-1"></i>Status</th>
+                                <th><i class="fas fa-cogs me-1"></i>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoryList">
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <div class="loading-spinner me-2"></div>
+                                    Loading categories...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="responseToast" class="toast" role="alert">
+            <div class="toast-header">
+                <i class="fas fa-bell text-primary me-2"></i>
+                <strong class="me-auto" id="toastTitle">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastBody"></div>
         </div>
     </div>
 
@@ -58,39 +298,164 @@
     <script>
         const token = localStorage.getItem('token');
 
-        async function loadCategories() {
+        function showToast(title, message, isSuccess = true) {
+            const toast = new bootstrap.Toast(document.getElementById('responseToast'));
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastBody').textContent = message;
+
+            const toastElement = document.getElementById('responseToast');
+            toastElement.className = `toast ${isSuccess ? 'bg-success' : 'bg-danger'} text-white`;
+
+            toast.show();
+        }
+
+        function resetForm() {
+            document.getElementById('categoryForm').reset();
+            document.getElementById('categoryId').value = '';
+            document.getElementById('isEditing').value = 'false';
+            document.getElementById('isActive').checked = true;
+
+            // Update UI
+            document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle me-2"></i>Add New Category';
+            document.getElementById('saveBtnText').textContent = 'Add Category';
+            document.getElementById('resetBtn').style.display = 'none';
+            document.getElementById('cancelBtn').style.display = 'none';
+
+            // Remove edit styling from all rows
+            document.querySelectorAll('.edit-mode').forEach(row => {
+                row.classList.remove('edit-mode');
+            });
+        }
+
+        async function editCategory(categoryId) {
             try {
-                const res = await fetch('/odata/Categories?$orderby=CategoryName', {
+                // Fetch fresh data from API to ensure accuracy
+                const res = await fetch(`/odata/Categories(${categoryId})`, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
-                const data = await res.json();
-                const tbody = document.getElementById('categoryList');
-                tbody.innerHTML = '';
 
-                data.value.forEach(c => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                            <td>${c.CategoryId}</td>
-                            <td>${c.CategoryName}</td>
-                            <td>${c.CategoryDescription}</td>
-                            <td>
-                                <span class="badge ${c.IsActive ? 'bg-success' : 'bg-secondary'}">
-                                    ${c.IsActive ? 'Active' : 'Inactive'}
-                                </span>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-danger" onclick="deleteCategory(${c.CategoryId})">Delete</button>
-                            </td>
-                        `;
-                    tbody.appendChild(tr);
-                });
+                if (res.ok) {
+                    const categoryData = await res.json();
+                    populateFormForEdit(categoryData);
+
+                    // Add edit styling to the row
+                    const rows = document.querySelectorAll('#categoryList tr');
+                    rows.forEach(row => {
+                        const firstCell = row.cells[0];
+                        if (firstCell && firstCell.textContent == categoryId) {
+                            row.classList.add('edit-mode');
+                        }
+                    });
+                } else {
+                    showToast('Error', 'Failed to load category for editing', false);
+                }
             } catch (error) {
-                console.error('Error loading categories:', error);
+                console.error('Error fetching category:', error);
+                showToast('Error', 'Network error loading category', false);
             }
         }
 
-        document.getElementById('createCategoryForm').addEventListener('submit', async e => {
+        function populateFormForEdit(category) {
+            console.log('Populating form with category data:', category);
+
+            document.getElementById('categoryId').value = category.CategoryId;
+            document.getElementById('isEditing').value = 'true';
+            document.getElementById('categoryName').value = category.CategoryName || '';
+            document.getElementById('categoryDescription').value = category.CategoryDescription || '';
+
+            // Handle IsActive status properly
+            const isActive = category.IsActive === true || category.IsActive === 'true';
+            document.getElementById('isActive').checked = isActive;
+
+            // Update UI
+            document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-2"></i>Edit Category';
+            document.getElementById('saveBtnText').textContent = 'Update Category';
+            document.getElementById('resetBtn').style.display = 'inline-block';
+            document.getElementById('cancelBtn').style.display = 'inline-block';
+
+            // Scroll to form
+            document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+
+            console.log('Form populated successfully');
+        }
+
+        async function loadCategories() {
+            try {
+                const tbody = document.getElementById('categoryList');
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><div class="loading-spinner me-2"></div>Loading categories...</td></tr>';
+
+                const res = await fetch('/odata/Categories?$orderby=CategoryName', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+
+                const data = await res.json();
+                tbody.innerHTML = '';
+
+                if (data.value && data.value.length > 0) {
+                    data.value.forEach((c, index) => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'fade-in';
+                        tr.style.animationDelay = `${index * 0.1}s`;
+
+                        tr.innerHTML = `
+                                <td><span class="badge bg-info">${c.CategoryId}</span></td>
+                                <td><strong>${c.CategoryName}</strong></td>
+                                <td>${c.CategoryDescription}</td>
+                                <td>
+                                    <span class="badge ${c.IsActive ? 'bg-success' : 'bg-secondary'}">
+                                        <i class="fas ${c.IsActive ? 'fa-check-circle' : 'fa-times-circle'} me-1"></i>
+                                        ${c.IsActive ? 'Active' : 'Inactive'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-outline-primary btn-sm" onclick="editCategory(${c.CategoryId})" title="Edit Category">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteCategory(${c.CategoryId})" title="Delete Category">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = `
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <i class="fas fa-tags text-muted mb-3" style="font-size: 3rem;"></i>
+                                    <h5 class="text-muted">No categories found</h5>
+                                    <p class="text-muted">Create your first category to get started!</p>
+                                </td>
+                            </tr>
+                        `;
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                const tbody = document.getElementById('categoryList');
+                tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="alert alert-danger mb-0">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Error loading categories: ${error.message}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+            }
+        }
+
+        document.getElementById('categoryForm').addEventListener('submit', async e => {
             e.preventDefault();
+
+            const isEditing = document.getElementById('isEditing').value === 'true';
+            const categoryId = document.getElementById('categoryId').value;
 
             // Get form values and validate
             const categoryName = document.getElementById('categoryName').value.trim();
@@ -99,24 +464,31 @@
 
             // Validation
             if (!categoryName) {
-                alert('Category Name is required');
+                showToast('Validation Error', 'Category Name is required', false);
                 return;
             }
             if (!categoryDescription) {
-                alert('Category Description is required');
+                showToast('Validation Error', 'Category Description is required', false);
                 return;
             }
 
-            // Prepare category data - try different field name formats
+            // Prepare category data
             const category = {
                 CategoryName: categoryName,
-                CategoryDescription: categoryDescription, // Also try correct spelling
+                CategoryDescription: categoryDescription,
                 IsActive: isActive,
                 ParentCategoryId: null
             };
 
-            console.log('Creating category:', category);
+            if (isEditing) {
+                category.CategoryId = parseInt(categoryId);
+                await updateCategory(categoryId, category);
+            } else {
+                await createCategory(category);
+            }
+        });
 
+        async function createCategory(category) {
             try {
                 const res = await fetch('/odata/Categories', {
                     method: 'POST',
@@ -127,49 +499,89 @@
                     body: JSON.stringify(category)
                 });
 
-                console.log('Response status:', res.status);
-                console.log('Response headers:', res.headers.get('content-type'));
-
-                // Get response text first
                 const responseText = await res.text();
-                console.log('Response text:', responseText);
 
                 if (res.ok) {
-                    // Success
-                    document.getElementById('createCategoryForm').reset();
-                    document.getElementById('isActive').checked = true;
+                    showToast('Success', 'Category created successfully!');
+                    resetForm();
                     loadCategories();
-                    alert('Category created successfully!');
                 } else {
-                    // Parse error response
                     let errorMessage = 'Error creating category';
-
                     try {
                         if (responseText) {
                             const errorData = JSON.parse(responseText);
-                            if (errorData.error && errorData.error.message) {
+                            if (errorData.error?.message) {
                                 errorMessage = errorData.error.message;
                             } else if (errorData.message) {
                                 errorMessage = errorData.message;
-                            } else {
-                                errorMessage = responseText;
                             }
                         }
                     } catch (parseError) {
                         errorMessage = responseText || `HTTP ${res.status}: ${res.statusText}`;
                     }
-
-                    console.error('Error response:', errorMessage);
-                    alert('Error: ' + errorMessage);
+                    showToast('Error', errorMessage, false);
                 }
             } catch (error) {
                 console.error('Network error:', error);
-                alert('Network error: ' + error.message);
+                showToast('Error', 'Network error: ' + error.message, false);
             }
-        });
+        }
+
+        async function updateCategory(categoryId, category) {
+            try {
+                // Create complete payload with CategoryId included
+                const updatePayload = {
+                    CategoryId: parseInt(categoryId),
+                    CategoryName: category.CategoryName,
+                    CategoryDescription: category.CategoryDescription,
+                    IsActive: category.IsActive,
+                    ParentCategoryId: category.ParentCategoryId
+                };
+
+                console.log('Updating category with payload:', updatePayload);
+
+                const res = await fetch(`/odata/Categories(${categoryId})`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(updatePayload)
+                });
+
+                console.log('Update response status:', res.status);
+                const responseText = await res.text();
+                console.log('Update response body:', responseText);
+
+                if (res.ok || res.status === 204) {
+                    showToast('Success', 'Category updated successfully!');
+                    resetForm();
+                    loadCategories();
+                } else {
+                    let errorMessage = 'Error updating category';
+                    try {
+                        if (responseText) {
+                            const errorData = JSON.parse(responseText);
+                            if (errorData.error?.message) {
+                                errorMessage = errorData.error.message;
+                            } else if (errorData.message) {
+                                errorMessage = errorData.message;
+                            }
+                        }
+                    } catch (parseError) {
+                        errorMessage = responseText || `HTTP ${res.status}: ${res.statusText}`;
+                    }
+                    showToast('Error', errorMessage, false);
+                }
+            } catch (error) {
+                console.error('Network error:', error);
+                showToast('Error', 'Network error: ' + error.message, false);
+            }
+        }
 
         async function deleteCategory(id) {
-            if (!confirm('Are you sure you want to delete this category?')) return;
+            if (!confirm('Are you sure you want to delete this category? This action cannot be undone.')) return;
 
             try {
                 const res = await fetch(`/odata/Categories(${id})`, {
@@ -178,19 +590,59 @@
                 });
 
                 if (res.ok) {
+                    showToast('Success', 'Category deleted successfully!');
                     loadCategories();
-                    alert('Category deleted successfully!');
+
+                    // If we're currently editing this category, reset the form
+                    if (document.getElementById('categoryId').value == id) {
+                        resetForm();
+                    }
                 } else {
-                    alert('Error deleting category');
+                    const errorText = await res.text();
+                    let errorMessage = 'Error deleting category';
+
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        if (errorData.error?.message) {
+                            errorMessage = errorData.error.message;
+                        } else if (errorData.message) {
+                            errorMessage = errorData.message;
+                        }
+                    } catch (e) {
+                        errorMessage = errorText || 'Error deleting category';
+                    }
+
+                    showToast('Error', errorMessage, false);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error deleting category');
+                showToast('Error', 'Network error: ' + error.message, false);
             }
         }
 
         // Initialize
-        loadCategories();
+        if (!token) {
+            document.getElementById('categoryList').innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <div class="alert alert-warning mb-0">
+                                <i class="fas fa-lock me-2"></i>
+                                Please <a href="/login.html" class="alert-link">login</a> first to access the category management system.
+                            </div>
+                        </td>
+                    </tr>
+                `;
+        } else {
+            loadCategories();
+        }
+
+        // Add smooth animations on load
+        document.addEventListener('DOMContentLoaded', function () {
+            const cards = document.querySelectorAll('.fade-in');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.2}s`;
+            });
+        });
     </script>
 </body>
 </html>

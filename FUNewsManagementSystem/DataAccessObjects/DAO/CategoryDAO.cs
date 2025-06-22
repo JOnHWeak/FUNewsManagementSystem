@@ -1,10 +1,9 @@
-﻿
-using BusinessObjects;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BusinessObjects;
 
 namespace DataAccessObjects.DAO
 {
@@ -24,6 +23,7 @@ namespace DataAccessObjects.DAO
             }
             return listCategories;
         }
+
         public static void AddCategory(Category category)
         {
             using var context = new FunewsManagementContext();
@@ -34,11 +34,16 @@ namespace DataAccessObjects.DAO
         public static void UpdateCategory(Category category)
         {
             using var context = new FunewsManagementContext();
-            var existing = context.Categories.FirstOrDefault(c => c.CategoryId == category.CategoryId);
+            var existing = context.Categories.FirstOrDefault(c =>
+                c.CategoryId == category.CategoryId
+            );
             if (existing == null)
                 throw new Exception("Category not found.");
 
             existing.CategoryName = category.CategoryName;
+            existing.CategoryDescription = category.CategoryDescription;
+            existing.ParentCategoryId = category.ParentCategoryId;
+            existing.IsActive = category.IsActive; // cập nhật trạng thái hoạt động
             // thêm các trường khác nếu có
             context.SaveChanges();
         }
@@ -65,14 +70,12 @@ namespace DataAccessObjects.DAO
             try
             {
                 using var context = new FunewsManagementContext();
-                return context.Categories
-                              .FirstOrDefault(c => c.CategoryId == categoryId);
+                return context.Categories.FirstOrDefault(c => c.CategoryId == categoryId);
             }
             catch (Exception e)
             {
                 throw new Exception(e.Message);
             }
         }
-
     }
 }
